@@ -3,6 +3,7 @@ library(dplyr)
 library(readxl)
 library(lubridate)
 library(tidyr)
+library(ggplot2)
 rm(list = ls())
 
 setwd("~/Desktop/Data 331/GitHub/Final/cabbage_butterfly-main/Cabbage-Data/data")
@@ -10,7 +11,7 @@ setwd("~/Desktop/Data 331/GitHub/Final/cabbage_butterfly-main/Cabbage-Data/data"
 
 butterfly<- read_excel('CompletePierisData_2022-03-09.xlsx', .name_repair = "universal")
 
-
+#Question 1
 sexAffect <- butterfly %>% #arranged to answer all sex related questions
   select(SexUpdated, LWingLength, RWingLength, LWingWidth, RWingWidth, LBlackPatchApex, RBlackPatchApex, LAnteriorSpotM3, LPosteriorSpotCu2, RAnteriorSpotM3, RPosteriorSpotCu2)%>%
   arrange(SexUpdated, desc(SexUpdated))%>%
@@ -20,16 +21,7 @@ sexAffect <- butterfly %>% #arranged to answer all sex related questions
   rename(LSpot1 = LAnteriorSpotM3)%>%
   rename(LSpot2= LPosteriorSpotCu2)%>%
   rename(RSpot1= RAnteriorSpotM3)%>%
-  rename(RSpot2= RPosteriorSpotCu2)%>%
-  dplyr::mutate(Sex = ifelse(is.na(Sex),0, Sex))%>%
-  dplyr::mutate(LWingLength = ifelse(is.na(LWingLength),0, LWingLength))%>%
-  dplyr::mutate(RWingWidth = ifelse(is.na(RWingWidth),0, RWingWidth))%>%
-  dplyr::mutate(LApex = ifelse(is.na(LApex),0, LApex))%>%
-  dplyr::mutate(RApex = ifelse(is.na(RApex),0, RApex))%>%
-  dplyr::mutate(LSpot1 = ifelse(is.na(LSpot1),0, LSpot1))%>%
-  dplyr::mutate(LSpot2 = ifelse(is.na(LSpot2),0, LSpot2))%>%
-  dplyr::mutate(RSpot1 = ifelse(is.na(RSpot1),0, RSpot1))%>%
-  dplyr::mutate(RSpot2 = ifelse(is.na(RSpot2),0, RSpot2))
+  rename(RSpot2= RPosteriorSpotCu2)
   
 
 #to change all the char value to numeric
@@ -47,60 +39,47 @@ suppressWarnings(sexAffect$RSpot2<- as.numeric(sexAffect$RSpot2))
 
 
 #Wing length Comparison of Male and Female
-femaleWingLength <- sexAffect %>% 
+sexWingLength <- sexAffect %>% 
   select(Sex,LWingLength, RWingLength)%>%
   dplyr::mutate(Sex= toupper(Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex=="F","FEMALE",Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex =="F?","FEMALE",Sex))%>%
-  dplyr::filter(Sex == "FEMALE")%>%
-  dplyr::group_by(Sex)
-
-maleWingLength <- sexAffect%>%
-  select(Sex,LWingLength,RWingLength)%>%
-  dplyr::mutate(Sex= toupper(Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex=="M","MALE",Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex =="M?","MALE",Sex))%>%
-  dplyr::filter(Sex == "MALE")%>%
-  dplyr::group_by(Sex)
+  dplyr::group_by(Sex)%>%
+  dplyr::filter(!is.na(Sex))%>% #remove na
+  dplyr::filter(!is.na(LWingLength))%>% #remove na
+  dplyr::filter(!is.na(RWingLength)) #remove na
 
+  
 #Wing Width Comparison of Male and Female
-femaleWingWidth <- sexAffect%>%
+sexWingWidth <- sexAffect%>%
   select(Sex, LWingWidth, RWingWidth)%>%
   dplyr::mutate(Sex= toupper(Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex=="F","FEMALE",Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex =="F?","FEMALE",Sex))%>%
-  dplyr::filter(Sex == "FEMALE")%>%
-  dplyr::group_by(Sex)
-
-maleWingWidth <- sexAffect%>%
-  select(Sex, LWingWidth, RWingWidth)%>%
-  dplyr::mutate(Sex= toupper(Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex=="M","MALE",Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex =="M?","MALE",Sex))%>%
-  dplyr::filter(Sex == "MALE")%>%
-  dplyr::group_by(Sex)
+  dplyr::group_by(Sex)%>%
+  dplyr::filter(!is.na(Sex))%>% #remove na
+  dplyr::filter(!is.na(LWingWidth))%>% #remove na
+  dplyr::filter(!is.na(RWingWidth)) #remove na
 
-#plot the male wing length, wing width incomparison to female wing length, width
 
 #Apex Comparison of Male and Female
 #multiply to take out the area
 sexAffect$total_apex <- sexAffect$LApex * sexAffect$RApex
 
-femaleApex <- sexAffect%>%
+sexApex <- sexAffect%>%
   select(Sex, total_apex)%>%
   dplyr::mutate(Sex= toupper(Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex=="F","FEMALE",Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex =="F?","FEMALE",Sex))%>%
-  dplyr::filter(Sex == "FEMALE")%>%
-  dplyr::group_by(Sex)
-
-maleApex <- sexAffect%>%
-  select(Sex, total_apex)%>%
-  dplyr::mutate(Sex= toupper(Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex=="M","MALE",Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex =="M?","MALE",Sex))%>%
-  dplyr::filter(Sex == "MALE")%>%
-  dplyr::group_by(Sex)
+  dplyr::group_by(Sex)%>%
+  dplyr::filter(!is.na(Sex))%>% #remove na
+  dplyr::filter(!is.na(total_apex)) #remove na
 
 #Spot Area Comparison of Male and Female
 
@@ -109,22 +88,20 @@ total_Rspot <- sexAffect$RSpot1 + sexAffect$RSpot2
 #multiply to take out the area
 sexAffect$total_spotArea <- total_Lspot * total_Rspot
 
-femaleSpotArea <- sexAffect%>%
+sexSpotArea <- sexAffect%>%
   select(Sex, total_spotArea)%>%
   dplyr::mutate(Sex= toupper(Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex=="F","FEMALE",Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex =="F?","FEMALE",Sex))%>%
-  dplyr::filter(Sex == "FEMALE")%>%
-  dplyr::group_by(Sex)
-
-maleSpotArea <- sexAffect%>%
-  select(Sex, total_spotArea)%>%
-  dplyr::mutate(Sex= toupper(Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex=="M","MALE",Sex))%>%
   dplyr::mutate(Sex = ifelse(Sex =="M?","MALE",Sex))%>%
-  dplyr::filter(Sex == "MALE")%>%
-  dplyr::group_by(Sex)
+  dplyr::mutate(Sex = ifelse(Sex =="MALE?","MALE",Sex))%>%
+  dplyr::group_by(Sex)%>%
+  dplyr::filter(!is.na(Sex))%>% #remove na
+  dplyr::filter(!is.na(total_spotArea)) #remove na
 
+
+#Question 2
 #How Latitude, Longitude affect the length/width
 #DecimalLatitudeUpdated, DecimalLongitudeUpdated, dwc.country
 
@@ -235,20 +212,66 @@ latitudeSpotArea <- locationAffect%>%
   dplyr::filter(!is.na(Latitude))%>% #remove na
   dplyr::filter(!is.na(total_spotArea)) #remove na
 
-longitudeApex <- locationAffect%>%
+longitudeSpotArea <- locationAffect%>%
   select(Longitude,total_spotArea)%>%
   dplyr::group_by(Longitude)%>%
   dplyr::filter(!is.na(Longitude))%>%
   dplyr::filter(!is.na(total_spotArea))
 
-countryApex <- locationAffect %>% 
+countrySpotArea <- locationAffect %>% 
   select(Country,total_spotArea)%>%
   dplyr::group_by(Country)%>%
   dplyr::filter(!is.na(Country))%>%
   dplyr::filter(!is.na(total_spotArea))
 
+#Question 3
 
+#relationship between apex area and spot area
+Spot_Apex <- sexAffect%>%
+  select(Sex, total_spotArea, total_apex)%>%
+  dplyr::mutate(Sex= toupper(Sex))%>%
+  dplyr::mutate(Sex = ifelse(Sex=="F","FEMALE",Sex))%>%
+  dplyr::mutate(Sex = ifelse(Sex =="F?","FEMALE",Sex))%>%
+  dplyr::mutate(Sex = ifelse(Sex=="M","MALE",Sex))%>%
+  dplyr::mutate(Sex = ifelse(Sex =="M?","MALE",Sex))%>%
+  dplyr::mutate(Sex = ifelse(Sex =="MALE?","MALE",Sex))%>%
+  dplyr::group_by(Sex)%>%
+  dplyr::filter(!is.na(Sex))%>% #remove na
+  dplyr::filter(!is.na(total_spotArea))%>% #remove na
+  dplyr::filter(!is.na(total_apex))
 
+ggplot(Spot_Apex, aes(x=total_spotArea, y=total_apex))+
+  geom_line(aes(color=Sex))
+
+#relationship between apex area and wing length by latitude
+Apex_WingLength <- locationAffect%>%
+  select(Latitude, LWingLength, RWingLength, total_apex)%>%
+  dplyr::group_by(Latitude)%>%
+  dplyr::filter(!is.na(Latitude))%>% #remove na
+  dplyr::filter(!is.na(LWingLength))%>% #remove na
+  dplyr::filter(!is.na(RWingLength))%>% #remove na
+  dplyr::filter(!is.na(total_apex))
+  
+Apex_WingLength$totalWingLenth <-Apex_WingLength$LWingLength+ Apex_WingLength$RWingLength
+
+ggplot(Apex_WingLength, aes(x=totalWingLenth, y=total_apex))+
+  geom_line(aes(color=Latitude))
+
+#relationship between apex area and wing length by longitude
+Spot_WingLength <- locationAffect%>%
+  select(Longitude, LWingLength, RWingLength, total_spotArea)%>%
+  dplyr::group_by(Longitude)%>%
+  dplyr::filter(!is.na(Longitude))%>% #remove na
+  dplyr::filter(!is.na(LWingLength))%>% #remove na
+  dplyr::filter(!is.na(RWingLength))%>% #remove na
+  dplyr::filter(!is.na(total_spotArea))
+
+Spot_WingLength$totalWingLenth <-Spot_WingLength$LWingLength+ Spot_WingLength$RWingLength
+
+ggplot(Spot_WingLength, aes(x=totalWingLenth, y=total_spotArea))+
+  geom_line(aes(color=Longitude))
+
+#Question 4
 #How collection month or year affect thw wing length/ width, apex area, and anterior area
 #dwc:month, YearUpdated
 
@@ -340,20 +363,33 @@ monthSpotArea <- yearAffect%>%
   dplyr::filter(!is.na(total_spotArea)) #remove na
 
 
+#Question 5
 #An average for each wing, compare male vs female, and by decade.
 averageData <- butterfly %>%
   select(YearUpdated, SexUpdated,LWingLength, RWingLength, LWingWidth, RWingWidth)%>%
   rename(Year = YearUpdated)%>%
-  rename(Sex = SexUpdated)
+  rename(Sex = SexUpdated)%>%
+  dplyr::mutate(Sex= toupper(Sex))%>%
+  dplyr::mutate(Sex = ifelse(Sex=="F","FEMALE",Sex))%>%
+  dplyr::mutate(Sex = ifelse(Sex =="F?","FEMALE",Sex))%>%
+  dplyr::mutate(Sex = ifelse(Sex=="M","MALE",Sex))%>%
+  dplyr::mutate(Sex = ifelse(Sex =="M?","MALE",Sex))%>%
+  dplyr::mutate(Sex = ifelse(Sex =="MALE?","MALE",Sex))%>%
+  dplyr::filter(!is.na(Year))%>% #remove na
+  dplyr::filter(!is.na(Sex))%>% #remove na
+  dplyr::filter(!is.na(LWingLength))%>% #remove na
+  dplyr::filter(!is.na(RWingLength))%>%
+  dplyr::filter(!is.na(LWingWidth))%>%
+  dplyr::filter(!is.na(RWingWidth))%>%#remove na
+  dplyr::filter(!is.na(RWingWidth))%>%
+  dplyr::filter(Year>=2000)
+
+
 suppressWarnings(averageData$RWingLength<- as.numeric(averageData$RWingLength))
 suppressWarnings(averageData$LWingLength<- as.numeric(averageData$LWingLength))
 suppressWarnings(averageData$LWingWidth <- as.numeric(averageData$LWingWidth))
 suppressWarnings(averageData$RWingWidth<- as.numeric(averageData$RWingWidth))
 suppressWarnings(averageData$Year<- as.numeric(averageData$Year))
-
-
-#Graph average for each wing, compare male vs female, and by decade. 
-
 
 
 #ttest of average wing length and wing width
@@ -364,6 +400,13 @@ averageData$AverageWingWidthSum <- averageData$RWingWidth + averageData$LWingWid
 averageData$AverageWingWidth <- averageData$AverageWingWidthSum/2
 
 t.test(averageData$AverageWingLength, averageData$AverageWingWidth, var.equal = TRUE)
+
+#Graph average for each wing, compare male vs female, and by decade.
+ggplot(averageData, aes(x=Year, y=AverageWingLength))+
+  geom_line(aes(color=Sex))
+
+
+
 
 
 
