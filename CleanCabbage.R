@@ -10,6 +10,7 @@ setwd("~/Desktop/Data 331/GitHub/Final/cabbage_butterfly-main/Cabbage-Data/data"
 
 butterfly<- read_excel('CompletePierisData_2022-03-09.xlsx', .name_repair = "universal")
 
+
 sexAffect <- butterfly %>% #arranged to answer all sex related questions
   select(SexUpdated, LWingLength, RWingLength, LWingWidth, RWingWidth, LBlackPatchApex, RBlackPatchApex, LAnteriorSpotM3, LPosteriorSpotCu2, RAnteriorSpotM3, RPosteriorSpotCu2)%>%
   arrange(SexUpdated, desc(SexUpdated))%>%
@@ -144,6 +145,7 @@ locationAffect <- butterfly %>% #arranged to answer all location related questio
 suppressWarnings(locationAffect$Latitude <- as.numeric(locationAffect$Latitude))
 suppressWarnings(locationAffect$Longitude <- as.numeric(locationAffect$Longitude))
 suppressWarnings(locationAffect$RWingLength<- as.numeric(locationAffect$RWingLength))
+suppressWarnings(locationAffect$LWingLength<- as.numeric(locationAffect$LWingLength))
 suppressWarnings(locationAffect$LWingWidth <- as.numeric(locationAffect$LWingWidth))
 suppressWarnings(locationAffect$RWingWidth<- as.numeric(locationAffect$RWingWidth))
 suppressWarnings(locationAffect$LApex <- as.numeric(locationAffect$LApex))
@@ -176,6 +178,7 @@ countryWingLength <- locationAffect %>%
   dplyr::filter(!is.na(Country))%>%
   dplyr::filter(!is.na(LWingLength))%>% #remove na
   dplyr::filter(!is.na(RWingLength)) 
+
 
 #Wing Width Comparison by locations
 latitudeWingWidth <- locationAffect%>%
@@ -243,6 +246,126 @@ countryApex <- locationAffect %>%
   dplyr::group_by(Country)%>%
   dplyr::filter(!is.na(Country))%>%
   dplyr::filter(!is.na(total_spotArea))
+
+
+
+#How collection month or year affect thw wing length/ width, apex area, and anterior area
+#dwc:month, YearUpdated
+
+yearAffect <- butterfly %>% #arranged to answer all location related questions
+  select(dwc.month,YearUpdated, LWingLength, RWingLength, LWingWidth, RWingWidth, LBlackPatchApex, RBlackPatchApex, LAnteriorSpotM3, LPosteriorSpotCu2, RAnteriorSpotM3, RPosteriorSpotCu2)%>%
+  rename(Month= dwc.month)%>%
+  rename(Year= YearUpdated)%>%
+  rename(LApex= LBlackPatchApex)%>%
+  rename(RApex= RBlackPatchApex)%>%
+  rename(LSpot1 = LAnteriorSpotM3)%>%
+  rename(LSpot2= LPosteriorSpotCu2)%>%
+  rename(RSpot1= RAnteriorSpotM3)%>%
+  rename(RSpot2= RPosteriorSpotCu2)
+
+
+#to change all the char value to numeric
+suppressWarnings(yearAffect$RWingLength<- as.numeric(yearAffect$RWingLength))
+suppressWarnings(yearAffect$LWingLength<- as.numeric(yearAffect$LWingLength))
+suppressWarnings(yearAffect$LWingWidth <- as.numeric(yearAffect$LWingWidth))
+suppressWarnings(yearAffect$RWingWidth<- as.numeric(yearAffect$RWingWidth))
+suppressWarnings(yearAffect$LApex <- as.numeric(yearAffect$LApex))
+suppressWarnings(yearAffect$RApex<- as.numeric(yearAffect$RApex))
+suppressWarnings(yearAffect$LSpot1 <- as.numeric(yearAffect$LSpot1))
+suppressWarnings(yearAffect$LSpot2<- as.numeric(yearAffect$LSpot2))
+suppressWarnings(yearAffect$RSpot1 <- as.numeric(yearAffect$RSpot1))
+suppressWarnings(yearAffect$RSpot2<- as.numeric(yearAffect$RSpot2))
+
+#Wing length Comparison of month and year
+yearWingLength <- yearAffect %>% 
+  select(Year,LWingLength, RWingLength)%>%
+  dplyr::group_by(Year)%>%
+  dplyr::filter(!is.na(Year))%>% #remove na
+  dplyr::filter(!is.na(LWingLength))%>% #remove na
+  dplyr::filter(!is.na(RWingLength)) #remove na
+
+monthWingLength <- yearAffect %>% 
+  select(Month, LWingLength, RWingLength)%>%
+  dplyr::group_by(Month)%>%
+  dplyr::filter(!is.na(Month))%>% #remove na
+  dplyr::filter(!is.na(LWingLength))%>% #remove na
+  dplyr::filter(!is.na(RWingLength)) #remove na 
+
+#Wing Width Comparison of month and year
+yearWingWidth <- yearAffect%>%
+  select(Year,LWingWidth, RWingWidth)%>%
+  dplyr::group_by(Year)%>%
+  dplyr::filter(!is.na(Year))%>% #remove na
+  dplyr::filter(!is.na(LWingWidth))%>% #remove na
+  dplyr::filter(!is.na(RWingWidth)) #remove na
+
+monthWingWidth <- yearAffect%>%
+  select(Month,LWingWidth, RWingWidth)%>%
+  dplyr::group_by(Month)%>%
+  dplyr::filter(!is.na(Month))%>% #remove na
+  dplyr::filter(!is.na(LWingWidth))%>% #remove na
+  dplyr::filter(!is.na(RWingWidth)) #remove na
+
+#Apex area comparison by year and month
+yearAffect$total_apex <- yearAffect$LApex * yearAffect$RApex
+
+yearApex <- yearAffect%>%
+  select(Year,total_apex)%>%
+  dplyr::group_by(Year)%>%
+  dplyr::filter(!is.na(Year))%>% #remove na
+  dplyr::filter(!is.na(total_apex)) #remove na
+
+monthApex <- yearAffect%>%
+  select(Month,total_apex)%>%
+  dplyr::group_by(Month)%>%
+  dplyr::filter(!is.na(Month))%>% #remove na
+  dplyr::filter(!is.na(total_apex)) #remove na
+
+#Anterior spot area by Year and month
+total_Lspot <- yearAffect$LSpot1 + yearAffect$LSpot2
+total_Rspot <- yearAffect$RSpot1 + yearAffect$RSpot2
+#multiply to take out the area
+yearAffect$total_spotArea <- total_Lspot * total_Rspot
+
+yearSpotArea <- yearAffect%>%
+  select(Year,total_spotArea)%>%
+  dplyr::group_by(Year)%>%
+  dplyr::filter(!is.na(Year))%>% #remove na
+  dplyr::filter(!is.na(total_spotArea)) #remove na
+
+monthSpotArea <- yearAffect%>%
+  select(Month,total_spotArea)%>%
+  dplyr::group_by(Month)%>%
+  dplyr::filter(!is.na(Month))%>% #remove na
+  dplyr::filter(!is.na(total_spotArea)) #remove na
+
+
+#An average for each wing, compare male vs female, and by decade.
+averageData <- butterfly %>%
+  select(YearUpdated, SexUpdated,LWingLength, RWingLength, LWingWidth, RWingWidth)%>%
+  rename(Year = YearUpdated)%>%
+  rename(Sex = SexUpdated)
+suppressWarnings(averageData$RWingLength<- as.numeric(averageData$RWingLength))
+suppressWarnings(averageData$LWingLength<- as.numeric(averageData$LWingLength))
+suppressWarnings(averageData$LWingWidth <- as.numeric(averageData$LWingWidth))
+suppressWarnings(averageData$RWingWidth<- as.numeric(averageData$RWingWidth))
+suppressWarnings(averageData$Year<- as.numeric(averageData$Year))
+
+
+#Graph average for each wing, compare male vs female, and by decade. 
+
+
+
+#ttest of average wing length and wing width
+averageData$AverageWingLengthSum <- averageData$RWingLength + averageData$LWingLength
+averageData$AverageWingLength <- averageData$AverageWingLengthSum/2
+
+averageData$AverageWingWidthSum <- averageData$RWingWidth + averageData$LWingWidth
+averageData$AverageWingWidth <- averageData$AverageWingWidthSum/2
+
+t.test(averageData$AverageWingLength, averageData$AverageWingWidth, var.equal = TRUE)
+
+
 
 
 
