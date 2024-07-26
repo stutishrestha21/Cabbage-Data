@@ -1,4 +1,4 @@
-# cabbage_butterfly
+# Insects Biology Department Data Analysis
 Dataset is ongoing collection of insects around the world
 
 First we made a butterfly table where we extracted all the data from the excel document that was provided to us as CompletePierisData.
